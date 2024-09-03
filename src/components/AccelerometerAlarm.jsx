@@ -8,6 +8,7 @@ const AccelerometerAlarm = () => {
   const [sensitivity, setSensitivity] = useState(10);
   const audioContextRef = useRef(null);
   const oscillatorRef = useRef(null);
+  const gainNodeRef = useRef(null);
 
   useEffect(() => {
     if (isMonitoring) {
@@ -48,12 +49,12 @@ const AccelerometerAlarm = () => {
       oscillatorRef.current.type = 'sine';
       oscillatorRef.current.frequency.setValueAtTime(440, audioContext.currentTime);
       
-      const gainNode = audioContext.createGain();
-      gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-      gainNode.gain.linearRampToValueAtTime(1, audioContext.currentTime + 0.1);
+      gainNodeRef.current = audioContext.createGain();
+      gainNodeRef.current.gain.setValueAtTime(0, audioContext.currentTime);
+      gainNodeRef.current.gain.linearRampToValueAtTime(1, audioContext.currentTime + 0.1);
       
-      oscillatorRef.current.connect(gainNode);
-      gainNode.connect(audioContext.destination);
+      oscillatorRef.current.connect(gainNodeRef.current);
+      gainNodeRef.current.connect(audioContext.destination);
       oscillatorRef.current.start();
     }
   };
@@ -63,15 +64,22 @@ const AccelerometerAlarm = () => {
       setIsAlarming(false);
       if (oscillatorRef.current) {
         oscillatorRef.current.stop();
+        oscillatorRef.current.disconnect();
         oscillatorRef.current = null;
+      }
+      if (gainNodeRef.current) {
+        gainNodeRef.current.disconnect();
+        gainNodeRef.current = null;
       }
     }
   };
 
   const toggleMonitoring = () => {
-    setIsMonitoring(!isMonitoring);
-    if (isAlarming) {
+    if (isMonitoring) {
+      setIsMonitoring(false);
       stopAlarm();
+    } else {
+      setIsMonitoring(true);
     }
   };
 
