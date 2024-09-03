@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button"
 import { AlertCircle, Activity } from 'lucide-react';
+import LineChart from './LineChart';
 
 const AccelerometerAlarm = () => {
   const [isMonitoring, setIsMonitoring] = useState(false);
   const [sensitivity, setSensitivity] = useState(10);
-  const [movement, setMovement] = useState(0);
+  const [movement, setMovement] = useState({ x: 0, y: 0, z: 0 });
+  const [data, setData] = useState([]);
 
   useEffect(() => {
     if (isMonitoring) {
@@ -21,22 +23,26 @@ const AccelerometerAlarm = () => {
 
   const handleMotion = (event) => {
     const { accelerationIncludingGravity } = event;
-    const currentMovement = Math.sqrt(
-      accelerationIncludingGravity.x ** 2 +
-      accelerationIncludingGravity.y ** 2 +
-      accelerationIncludingGravity.z ** 2
-    );
-    setMovement(currentMovement);
+    const newMovement = {
+      x: accelerationIncludingGravity.x || 0,
+      y: accelerationIncludingGravity.y || 0,
+      z: accelerationIncludingGravity.z || 0
+    };
+    setMovement(newMovement);
+    setData(prevData => [...prevData.slice(-50), { ...newMovement, time: new Date().getTime() }]);
   };
 
   const toggleMonitoring = () => {
     setIsMonitoring(!isMonitoring);
+    if (!isMonitoring) {
+      setData([]);
+    }
   };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
       <h1 className="text-2xl font-bold mb-6">Accelerometer Monitor</h1>
-      <div className="mb-6">
+      <div className="mb-6 w-full max-w-md">
         <label htmlFor="sensitivity" className="block text-sm font-medium text-gray-700 mb-1">
           Sensitivity: {sensitivity}
         </label>
@@ -50,7 +56,7 @@ const AccelerometerAlarm = () => {
           className="w-full"
         />
       </div>
-      <div className="space-y-4">
+      <div className="space-y-4 w-full max-w-md">
         <Button
           onClick={toggleMonitoring}
           className={`w-full ${isMonitoring ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'}`}
@@ -67,8 +73,12 @@ const AccelerometerAlarm = () => {
         </Button>
       </div>
       {isMonitoring && (
-        <div className="mt-6">
-          <p className="text-lg font-semibold">Current Movement: {movement.toFixed(2)}</p>
+        <div className="mt-6 w-full max-w-2xl">
+          <p className="text-lg font-semibold mb-2">Current Movement:</p>
+          <p>X: {movement.x.toFixed(2)}</p>
+          <p>Y: {movement.y.toFixed(2)}</p>
+          <p>Z: {movement.z.toFixed(2)}</p>
+          <LineChart data={data} />
         </div>
       )}
     </div>
