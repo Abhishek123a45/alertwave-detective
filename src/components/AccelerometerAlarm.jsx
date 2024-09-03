@@ -1,91 +1,41 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button"
-import { AlertCircle, BellRing, BellOff } from 'lucide-react';
+import { AlertCircle, Activity } from 'lucide-react';
 
 const AccelerometerAlarm = () => {
   const [isMonitoring, setIsMonitoring] = useState(false);
-  const [isAlarming, setIsAlarming] = useState(false);
   const [sensitivity, setSensitivity] = useState(10);
-  const audioContextRef = useRef(null);
-  const oscillatorRef = useRef(null);
-  const gainNodeRef = useRef(null);
+  const [movement, setMovement] = useState(0);
 
   useEffect(() => {
     if (isMonitoring) {
       window.addEventListener('devicemotion', handleMotion);
     } else {
       window.removeEventListener('devicemotion', handleMotion);
-      stopAlarm();
     }
 
     return () => {
       window.removeEventListener('devicemotion', handleMotion);
-      stopAlarm();
     };
   }, [isMonitoring, sensitivity]);
 
   const handleMotion = (event) => {
     const { accelerationIncludingGravity } = event;
-    const movement = Math.sqrt(
+    const currentMovement = Math.sqrt(
       accelerationIncludingGravity.x ** 2 +
       accelerationIncludingGravity.y ** 2 +
       accelerationIncludingGravity.z ** 2
     );
-
-    if (movement > sensitivity) {
-      startAlarm();
-    }
-  };
-
-  const startAlarm = () => {
-    if (!isAlarming) {
-      setIsAlarming(true);
-      if (!audioContextRef.current) {
-        audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
-      }
-      const audioContext = audioContextRef.current;
-      
-      oscillatorRef.current = audioContext.createOscillator();
-      oscillatorRef.current.type = 'sine';
-      oscillatorRef.current.frequency.setValueAtTime(440, audioContext.currentTime);
-      
-      gainNodeRef.current = audioContext.createGain();
-      gainNodeRef.current.gain.setValueAtTime(0, audioContext.currentTime);
-      gainNodeRef.current.gain.linearRampToValueAtTime(1, audioContext.currentTime + 0.1);
-      
-      oscillatorRef.current.connect(gainNodeRef.current);
-      gainNodeRef.current.connect(audioContext.destination);
-      oscillatorRef.current.start();
-    }
-  };
-
-  const stopAlarm = () => {
-    if (isAlarming) {
-      setIsAlarming(false);
-      if (oscillatorRef.current) {
-        oscillatorRef.current.stop();
-        oscillatorRef.current.disconnect();
-        oscillatorRef.current = null;
-      }
-      if (gainNodeRef.current) {
-        gainNodeRef.current.disconnect();
-        gainNodeRef.current = null;
-      }
-    }
+    setMovement(currentMovement);
   };
 
   const toggleMonitoring = () => {
-    if (isMonitoring) {
-      setIsMonitoring(false);
-      stopAlarm();
-    } else {
-      setIsMonitoring(true);
-    }
+    setIsMonitoring(!isMonitoring);
   };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
-      <h1 className="text-2xl font-bold mb-6">Accelerometer Alarm</h1>
+      <h1 className="text-2xl font-bold mb-6">Accelerometer Monitor</h1>
       <div className="mb-6">
         <label htmlFor="sensitivity" className="block text-sm font-medium text-gray-700 mb-1">
           Sensitivity: {sensitivity}
@@ -111,16 +61,16 @@ const AccelerometerAlarm = () => {
             </>
           ) : (
             <>
-              <BellRing className="mr-2 h-4 w-4" /> Start Monitoring
+              <Activity className="mr-2 h-4 w-4" /> Start Monitoring
             </>
           )}
         </Button>
-        {isAlarming && (
-          <Button onClick={stopAlarm} className="w-full bg-yellow-500 hover:bg-yellow-600">
-            <BellOff className="mr-2 h-4 w-4" /> Silence Alarm
-          </Button>
-        )}
       </div>
+      {isMonitoring && (
+        <div className="mt-6">
+          <p className="text-lg font-semibold">Current Movement: {movement.toFixed(2)}</p>
+        </div>
+      )}
     </div>
   );
 };
