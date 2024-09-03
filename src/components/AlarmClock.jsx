@@ -41,7 +41,10 @@ const AlarmClock = () => {
       alarm.id === alarmId ? { ...alarm, isRinging: true } : alarm
     ));
     if (audioRef.current) {
-      audioRef.current.play();
+      audioRef.current.play().catch(error => {
+        console.error('Error playing audio:', error);
+        toast.error('Failed to play alarm sound. Please check your audio settings.');
+      });
     }
     toast.info(`Alarm ringing: ${alarms.find(a => a.id === alarmId).time}`);
   };
@@ -93,7 +96,13 @@ const AlarmClock = () => {
   const handleAudioChange = (event) => {
     const file = event.target.files[0];
     if (file) {
-      setSelectedAudio(URL.createObjectURL(file));
+      const audioUrl = URL.createObjectURL(file);
+      setSelectedAudio(audioUrl);
+      if (audioRef.current) {
+        audioRef.current.src = audioUrl;
+        audioRef.current.load();
+      }
+      toast.success('Alarm sound updated successfully!');
     }
   };
 
