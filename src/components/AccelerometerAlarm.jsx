@@ -2,15 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button"
 import { AlertCircle, Activity } from 'lucide-react';
 import LineChart from './LineChart';
-import { toast } from "sonner"
 
 const AccelerometerAlarm = () => {
   const [isMonitoring, setIsMonitoring] = useState(false);
   const [sensitivity, setSensitivity] = useState(10);
   const [movement, setMovement] = useState({ x: 0, y: 0, z: 0 });
   const [data, setData] = useState([]);
-  const [isMoving, setIsMoving] = useState(false);
-  const [lastSignificantMovement, setLastSignificantMovement] = useState(null);
 
   useEffect(() => {
     if (isMonitoring) {
@@ -33,32 +30,12 @@ const AccelerometerAlarm = () => {
     };
     setMovement(newMovement);
     setData(prevData => [...prevData.slice(-50), { ...newMovement, time: new Date().getTime() }]);
-
-    const magnitude = Math.sqrt(newMovement.x ** 2 + newMovement.y ** 2 + newMovement.z ** 2);
-    const isSignificantMovement = magnitude > sensitivity / 10;
-
-    if (isSignificantMovement && !isMoving) {
-      setIsMoving(true);
-      toast.info("Movement started");
-    } else if (!isSignificantMovement && isMoving) {
-      const currentTime = new Date().getTime();
-      if (lastSignificantMovement && (currentTime - lastSignificantMovement > 2000)) {
-        setIsMoving(false);
-        toast.info("Movement ended");
-      }
-    }
-
-    if (isSignificantMovement) {
-      setLastSignificantMovement(new Date().getTime());
-    }
   };
 
   const toggleMonitoring = () => {
     setIsMonitoring(!isMonitoring);
     if (!isMonitoring) {
       setData([]);
-      setIsMoving(false);
-      setLastSignificantMovement(null);
     }
   };
 
