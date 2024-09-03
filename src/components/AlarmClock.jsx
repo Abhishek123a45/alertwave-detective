@@ -84,7 +84,7 @@ const AlarmClock = () => {
       time: `${snoozeDate.getHours().toString().padStart(2, '0')}:${snoozeDate.getMinutes().toString().padStart(2, '0')}`,
       isRinging: false,
     };
-    setAlarms([...alarms, snoozeAlarm]);
+    setAlarms(prevAlarms => [...prevAlarms.filter(a => a.id !== alarmId), snoozeAlarm]);
     toast.info(`Alarm snoozed for ${snoozeTime} minutes.`);
   };
 
