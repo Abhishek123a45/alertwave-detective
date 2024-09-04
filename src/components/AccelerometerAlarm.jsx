@@ -11,6 +11,8 @@ const AccelerometerAlarm = () => {
   const [movement, setMovement] = useState({ x: 0, y: 0, z: 0 });
   const [data, setData] = useState([]);
   const [offsetTime, setOffsetTime] = useState(5);
+  const [lastMovement, setLastMovement] = useState({ x: 0, y: 0, z: 0 });
+  const [alarmTriggered, setAlarmTriggered] = useState(false);
 
   useEffect(() => {
     if (isMonitoring) {
@@ -33,12 +35,33 @@ const AccelerometerAlarm = () => {
     };
     setMovement(newMovement);
     setData(prevData => [...prevData.slice(-50), { ...newMovement, time: new Date().getTime() }]);
+
+    // Check for significant change in acceleration
+    const change = {
+      x: Math.abs(newMovement.x - lastMovement.x),
+      y: Math.abs(newMovement.y - lastMovement.y),
+      z: Math.abs(newMovement.z - lastMovement.z)
+    };
+
+    if ((change.x > 2 || change.y > 2 || change.z > 2) && !alarmTriggered) {
+      setAlarmTriggered(true);
+      triggerAlarm();
+    }
+
+    setLastMovement(newMovement);
+  };
+
+  const triggerAlarm = () => {
+    // This function will be called when significant movement is detected
+    console.log("Significant movement detected! Setting alarm...");
+    // The AlarmClock component will handle setting the actual alarm
   };
 
   const toggleMonitoring = () => {
     setIsMonitoring(!isMonitoring);
     if (!isMonitoring) {
       setData([]);
+      setAlarmTriggered(false);
     }
   };
 
@@ -97,7 +120,7 @@ const AccelerometerAlarm = () => {
           <LineChart data={data} />
         </div>
       )}
-      <AlarmClock initialOffsetTime={offsetTime} />
+      <AlarmClock initialOffsetTime={offsetTime} onAlarmTrigger={triggerAlarm} />
     </div>
   );
 };
