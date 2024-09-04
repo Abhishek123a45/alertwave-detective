@@ -34,7 +34,7 @@ const AccelerometerAlarm = () => {
         z: Math.abs(newMovement.z - lastMovementRef.current.z)
       };
 
-      if (change.x > 0.5 || change.y > 0.5 || change.z > 0.5) {
+      if (change.x > 1.5 || change.y > 1.5 || change.z > 1.5) {
         lastMovementTimeRef.current = Date.now();
         if (alarmTimeoutRef.current) {
           clearTimeout(alarmTimeoutRef.current);
