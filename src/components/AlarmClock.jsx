@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Bell, PauseCircle, Trash2 } from 'lucide-react';
+import { Bell, PauseCircle, Trash2, PlusCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 const AlarmClock = () => {
@@ -10,6 +10,7 @@ const AlarmClock = () => {
   const [newAlarmTime, setNewAlarmTime] = useState('');
   const [selectedAudio, setSelectedAudio] = useState(null);
   const [snoozeTime, setSnoozeTime] = useState(5);
+  const [timeOffset, setTimeOffset] = useState(5);
   const audioRef = useRef(null);
 
   useEffect(() => {
@@ -63,6 +64,18 @@ const AlarmClock = () => {
     } else {
       toast.error('Please set a valid alarm time.');
     }
+  };
+
+  const handleAddOffsetAlarm = () => {
+    const newAlarmDate = new Date(currentTime.getTime() + timeOffset * 60000);
+    const newAlarmTime = `${newAlarmDate.getHours().toString().padStart(2, '0')}:${newAlarmDate.getMinutes().toString().padStart(2, '0')}`;
+    const newAlarm = {
+      id: Date.now(),
+      time: newAlarmTime,
+      isRinging: false,
+    };
+    setAlarms([...alarms, newAlarm]);
+    toast.success(`Alarm added for ${newAlarmTime}`);
   };
 
   const handleStopAlarm = (alarmId) => {
@@ -125,6 +138,21 @@ const AlarmClock = () => {
         <Button onClick={handleAddAlarm} className="w-full">
           <Bell className="mr-2 h-4 w-4" /> Add Alarm
         </Button>
+      </div>
+      <div className="w-full max-w-xs space-y-2">
+        <div className="flex items-center space-x-2">
+          <Input
+            type="number"
+            value={timeOffset}
+            onChange={(e) => setTimeOffset(Number(e.target.value))}
+            min="1"
+            className="w-1/2"
+            placeholder="Minutes from now"
+          />
+          <Button onClick={handleAddOffsetAlarm} className="w-1/2">
+            <PlusCircle className="mr-2 h-4 w-4" /> Add Offset Alarm
+          </Button>
+        </div>
       </div>
       <div className="w-full max-w-xs space-y-2">
         <label htmlFor="snooze-time" className="block text-sm font-medium text-gray-700">
