@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { AlertCircle, Activity } from 'lucide-react';
 import LineChart from './LineChart';
+import AlarmClock from './AlarmClock';
 
 const AccelerometerAlarm = () => {
   const [isMonitoring, setIsMonitoring] = useState(false);
   const [sensitivity, setSensitivity] = useState(10);
   const [movement, setMovement] = useState({ x: 0, y: 0, z: 0 });
   const [data, setData] = useState([]);
+  const [offsetTime, setOffsetTime] = useState(5);
 
   useEffect(() => {
     if (isMonitoring) {
@@ -56,6 +59,19 @@ const AccelerometerAlarm = () => {
           className="w-full"
         />
       </div>
+      <div className="mb-6 w-full max-w-md">
+        <label htmlFor="offsetTime" className="block text-sm font-medium text-gray-700 mb-1">
+          Offset Time (minutes):
+        </label>
+        <Input
+          type="number"
+          id="offsetTime"
+          value={offsetTime}
+          onChange={(e) => setOffsetTime(Number(e.target.value))}
+          min="1"
+          className="w-full"
+        />
+      </div>
       <div className="space-y-4 w-full max-w-md">
         <Button
           onClick={toggleMonitoring}
@@ -81,6 +97,7 @@ const AccelerometerAlarm = () => {
           <LineChart data={data} />
         </div>
       )}
+      <AlarmClock initialOffsetTime={offsetTime} />
     </div>
   );
 };

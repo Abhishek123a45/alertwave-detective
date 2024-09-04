@@ -1,16 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Bell, PauseCircle, Trash2, PlusCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import AlarmList from './AlarmList';
+import AlarmForm from './AlarmForm';
 
-const AlarmClock = () => {
+const AlarmClock = ({ initialOffsetTime }) => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [alarms, setAlarms] = useState([]);
   const [newAlarmTime, setNewAlarmTime] = useState('');
   const [selectedAudio, setSelectedAudio] = useState(null);
   const [snoozeTime, setSnoozeTime] = useState(5);
-  const [timeOffset, setTimeOffset] = useState(5);
+  const [timeOffset, setTimeOffset] = useState(initialOffsetTime || 5);
   const audioRef = useRef(null);
 
   useEffect(() => {
@@ -128,32 +128,14 @@ const AlarmClock = () => {
       <div className="text-4xl font-bold">
         {currentTime.toLocaleTimeString()}
       </div>
-      <div className="w-full max-w-xs space-y-2">
-        <Input
-          type="time"
-          value={newAlarmTime}
-          onChange={(e) => setNewAlarmTime(e.target.value)}
-          className="w-full"
-        />
-        <Button onClick={handleAddAlarm} className="w-full">
-          <Bell className="mr-2 h-4 w-4" /> Add Alarm
-        </Button>
-      </div>
-      <div className="w-full max-w-xs space-y-2">
-        <div className="flex items-center space-x-2">
-          <Input
-            type="number"
-            value={timeOffset}
-            onChange={(e) => setTimeOffset(Number(e.target.value))}
-            min="1"
-            className="w-1/2"
-            placeholder="Minutes from now"
-          />
-          <Button onClick={handleAddOffsetAlarm} className="w-1/2">
-            <PlusCircle className="mr-2 h-4 w-4" /> Add Offset Alarm
-          </Button>
-        </div>
-      </div>
+      <AlarmForm
+        newAlarmTime={newAlarmTime}
+        onNewAlarmTimeChange={setNewAlarmTime}
+        onAddAlarm={handleAddAlarm}
+        timeOffset={timeOffset}
+        onTimeOffsetChange={setTimeOffset}
+        onAddOffsetAlarm={handleAddOffsetAlarm}
+      />
       <div className="w-full max-w-xs space-y-2">
         <label htmlFor="snooze-time" className="block text-sm font-medium text-gray-700">
           Snooze Time (minutes):
@@ -178,30 +160,12 @@ const AlarmClock = () => {
           onChange={handleAudioChange}
         />
       </div>
-      <div className="w-full max-w-xs space-y-2">
-        <h3 className="text-lg font-semibold">Alarms:</h3>
-        {alarms.map(alarm => (
-          <div key={alarm.id} className="flex items-center justify-between bg-gray-100 p-2 rounded">
-            <span>{alarm.time}</span>
-            <div>
-              {alarm.isRinging ? (
-                <>
-                  <Button onClick={() => handleStopAlarm(alarm.id)} variant="destructive" size="sm" className="mr-2">
-                    <PauseCircle className="h-4 w-4" />
-                  </Button>
-                  <Button onClick={() => handleSnooze(alarm.id)} variant="outline" size="sm">
-                    Snooze
-                  </Button>
-                </>
-              ) : (
-                <Button onClick={() => handleDeleteAlarm(alarm.id)} variant="ghost" size="sm">
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
+      <AlarmList
+        alarms={alarms}
+        onStopAlarm={handleStopAlarm}
+        onSnooze={handleSnooze}
+        onDeleteAlarm={handleDeleteAlarm}
+      />
       <audio ref={audioRef} src={selectedAudio || '/default-alarm.mp3'} />
     </div>
   );
