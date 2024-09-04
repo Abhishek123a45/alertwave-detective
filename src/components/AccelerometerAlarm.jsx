@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { AlertCircle, Activity } from 'lucide-react';
 import LineChart from './LineChart';
 import AlarmClock from './AlarmClock';
+import { toast } from 'sonner';
 
 const AccelerometerAlarm = () => {
   const [isMonitoring, setIsMonitoring] = useState(false);
@@ -11,6 +12,8 @@ const AccelerometerAlarm = () => {
   const [movement, setMovement] = useState({ x: 0, y: 0, z: 0 });
   const [data, setData] = useState([]);
   const [offsetTime, setOffsetTime] = useState(5);
+  const alarmClockRef = useRef(null);
+  const lastMovementRef = useRef({ x: 0, y: 0, z: 0 });
 
   useEffect(() => {
     if (isMonitoring) {
@@ -33,12 +36,35 @@ const AccelerometerAlarm = () => {
     };
     setMovement(newMovement);
     setData(prevData => [...prevData.slice(-50), { ...newMovement, time: new Date().getTime() }]);
+
+    if (isMonitoring) {
+      const change = {
+        x: Math.abs(newMovement.x - lastMovementRef.current.x),
+        y: Math.abs(newMovement.y - lastMovementRef.current.y),
+        z: Math.abs(newMovement.z - lastMovementRef.current.z)
+      };
+
+      if (change.x > 2 || change.y > 2 || change.z > 2) {
+        setAlarm();
+      }
+    }
+
+    lastMovementRef.current = newMovement;
+  };
+
+  const setAlarm = () => {
+    if (alarmClockRef.current && alarmClockRef.current.handleAddOffsetAlarm) {
+      alarmClockRef.current.handleAddOffsetAlarm();
+      toast.success('Alarm set due to significant movement detected!');
+      setIsMonitoring(false);
+    }
   };
 
   const toggleMonitoring = () => {
     setIsMonitoring(!isMonitoring);
     if (!isMonitoring) {
       setData([]);
+      lastMovementRef.current = { x: 0, y: 0, z: 0 };
     }
   };
 
@@ -97,7 +123,7 @@ const AccelerometerAlarm = () => {
           <LineChart data={data} />
         </div>
       )}
-      <AlarmClock initialOffsetTime={offsetTime} />
+      <AlarmClock ref={alarmClockRef} initialOffsetTime={offsetTime} />
     </div>
   );
 };
