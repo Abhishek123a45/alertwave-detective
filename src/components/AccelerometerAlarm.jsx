@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { AlertCircle, Activity } from 'lucide-react';
@@ -14,20 +14,10 @@ const AccelerometerAlarm = () => {
   const [offsetTime, setOffsetTime] = useState(5);
   const alarmClockRef = useRef(null);
   const lastMovementRef = useRef({ x: 0, y: 0, z: 0 });
+  const lastMovementTimeRef = useRef(Date.now());
+  const alarmTimeoutRef = useRef(null);
 
-  useEffect(() => {
-    if (isMonitoring) {
-      window.addEventListener('devicemotion', handleMotion);
-    } else {
-      window.removeEventListener('devicemotion', handleMotion);
-    }
-
-    return () => {
-      window.removeEventListener('devicemotion', handleMotion);
-    };
-  }, [isMonitoring, sensitivity]);
-
-  const handleMotion = (event) => {
+  const handleMotion = useCallback((event) => {
     const { accelerationIncludingGravity } = event;
     const newMovement = {
       x: accelerationIncludingGravity.x || 0,
@@ -44,18 +34,41 @@ const AccelerometerAlarm = () => {
         z: Math.abs(newMovement.z - lastMovementRef.current.z)
       };
 
-      if (change.x > 2 || change.y > 2 || change.z > 2) {
-        setAlarm();
+      if (change.x > 0.5 || change.y > 0.5 || change.z > 0.5) {
+        lastMovementTimeRef.current = Date.now();
+        if (alarmTimeoutRef.current) {
+          clearTimeout(alarmTimeoutRef.current);
+        }
+        alarmTimeoutRef.current = setTimeout(setAlarm, offsetTime * 60 * 1000);
       }
     }
 
     lastMovementRef.current = newMovement;
-  };
+  }, [isMonitoring, offsetTime]);
+
+  useEffect(() => {
+    if (isMonitoring) {
+      window.addEventListener('devicemotion', handleMotion);
+      alarmTimeoutRef.current = setTimeout(setAlarm, offsetTime * 60 * 1000);
+    } else {
+      window.removeEventListener('devicemotion', handleMotion);
+      if (alarmTimeoutRef.current) {
+        clearTimeout(alarmTimeoutRef.current);
+      }
+    }
+
+    return () => {
+      window.removeEventListener('devicemotion', handleMotion);
+      if (alarmTimeoutRef.current) {
+        clearTimeout(alarmTimeoutRef.current);
+      }
+    };
+  }, [isMonitoring, handleMotion, offsetTime]);
 
   const setAlarm = () => {
     if (alarmClockRef.current && alarmClockRef.current.handleAddOffsetAlarm) {
       alarmClockRef.current.handleAddOffsetAlarm();
-      toast.success('Alarm set due to significant movement detected!');
+      toast.success('Alarm set due to no movement detected for the specified time!');
       setIsMonitoring(false);
     }
   };
@@ -65,6 +78,11 @@ const AccelerometerAlarm = () => {
     if (!isMonitoring) {
       setData([]);
       lastMovementRef.current = { x: 0, y: 0, z: 0 };
+      lastMovementTimeRef.current = Date.now();
+    } else {
+      if (alarmTimeoutRef.current) {
+        clearTimeout(alarmTimeoutRef.current);
+      }
     }
   };
 
