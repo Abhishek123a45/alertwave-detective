@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { AlertCircle, Activity } from 'lucide-react';
-import { toast } from 'sonner';
 import LineChart from './LineChart';
 import AlarmClock from './AlarmClock';
 
@@ -12,9 +11,6 @@ const AccelerometerAlarm = () => {
   const [movement, setMovement] = useState({ x: 0, y: 0, z: 0 });
   const [data, setData] = useState([]);
   const [offsetTime, setOffsetTime] = useState(5);
-  const [lastMovement, setLastMovement] = useState({ x: 0, y: 0, z: 0 });
-  const [alarmTriggered, setAlarmTriggered] = useState(false);
-  const [alarms, setAlarms] = useState([]);
 
   useEffect(() => {
     if (isMonitoring) {
@@ -37,51 +33,13 @@ const AccelerometerAlarm = () => {
     };
     setMovement(newMovement);
     setData(prevData => [...prevData.slice(-50), { ...newMovement, time: new Date().getTime() }]);
-
-    // Check for significant change in acceleration
-    const change = {
-      x: Math.abs(newMovement.x - lastMovement.x),
-      y: Math.abs(newMovement.y - lastMovement.y),
-      z: Math.abs(newMovement.z - lastMovement.z)
-    };
-
-    if ((change.x > 2 || change.y > 2 || change.z > 2) && !alarmTriggered) {
-      setAlarmTriggered(true);
-      triggerAlarm();
-    }
-
-    setLastMovement(newMovement);
-  };
-
-  const triggerAlarm = () => {
-    console.log("Significant movement detected! Setting alarm...");
-    const newAlarmTime = new Date(Date.now() + offsetTime * 60000);
-    const formattedTime = newAlarmTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    
-    const newAlarm = {
-      id: Date.now(),
-      time: formattedTime,
-      isRinging: false,
-    };
-    
-    setAlarms(prevAlarms => [...prevAlarms, newAlarm]);
-    toast.success(`Alarm added for ${formattedTime} due to significant movement`);
-    
-    // Reset the alarm trigger after a short delay
-    setTimeout(() => setAlarmTriggered(false), 5000);
   };
 
   const toggleMonitoring = () => {
     setIsMonitoring(!isMonitoring);
     if (!isMonitoring) {
       setData([]);
-      setAlarmTriggered(false);
     }
-  };
-
-  const handleDeleteAlarm = (alarmId) => {
-    setAlarms(prevAlarms => prevAlarms.filter(alarm => alarm.id !== alarmId));
-    toast.success('Alarm deleted successfully!');
   };
 
   return (
@@ -139,24 +97,7 @@ const AccelerometerAlarm = () => {
           <LineChart data={data} />
         </div>
       )}
-      <div className="mt-6 w-full max-w-md">
-        <h2 className="text-xl font-semibold mb-4">Alarms</h2>
-        {alarms.length > 0 ? (
-          <ul className="space-y-2">
-            {alarms.map(alarm => (
-              <li key={alarm.id} className="flex justify-between items-center bg-white p-2 rounded shadow">
-                <span>{alarm.time}</span>
-                <Button onClick={() => handleDeleteAlarm(alarm.id)} variant="destructive" size="sm">
-                  Delete
-                </Button>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p>No alarms set</p>
-        )}
-      </div>
-      <AlarmClock initialOffsetTime={offsetTime} onAlarmTrigger={triggerAlarm} />
+      <AlarmClock initialOffsetTime={offsetTime} />
     </div>
   );
 };
