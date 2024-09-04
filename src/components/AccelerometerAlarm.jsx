@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { AlertCircle, Activity } from 'lucide-react';
+import { toast } from 'sonner';
 import LineChart from './LineChart';
 import AlarmClock from './AlarmClock';
 
@@ -52,8 +53,8 @@ const AccelerometerAlarm = () => {
   };
 
   const triggerAlarm = () => {
-    // This function will be called when significant movement is detected
     console.log("Significant movement detected! Setting alarm...");
+    toast.success(`Alarm added for ${offsetTime} minutes from now due to significant movement`);
     // The AlarmClock component will handle setting the actual alarm
   };
 
