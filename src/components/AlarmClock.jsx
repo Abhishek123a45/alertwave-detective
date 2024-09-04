@@ -41,6 +41,7 @@ const AlarmClock = () => {
       alarm.id === alarmId ? { ...alarm, isRinging: true } : alarm
     ));
     if (audioRef.current) {
+      audioRef.current.loop = true;
       audioRef.current.play().catch(error => {
         console.error('Error playing audio:', error);
         toast.error('Failed to play alarm sound. Please check your audio settings.');
@@ -71,6 +72,7 @@ const AlarmClock = () => {
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
+      audioRef.current.loop = false;
     }
   };
 
@@ -90,6 +92,7 @@ const AlarmClock = () => {
 
   const handleDeleteAlarm = (alarmId) => {
     setAlarms(prevAlarms => prevAlarms.filter(alarm => alarm.id !== alarmId));
+    handleStopAlarm(alarmId);
     toast.success('Alarm deleted successfully!');
   };
 
