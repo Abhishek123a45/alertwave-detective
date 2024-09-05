@@ -4,13 +4,13 @@ import { toast } from 'sonner';
 import AlarmList from './AlarmList';
 import AlarmForm from './AlarmForm';
 
-const AlarmClock = ({ initialOffsetTime, onAlarmTrigger }) => {
+const AlarmClock = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [alarms, setAlarms] = useState([]);
   const [newAlarmTime, setNewAlarmTime] = useState('');
   const [selectedAudio, setSelectedAudio] = useState(null);
   const [snoozeTime, setSnoozeTime] = useState(5);
-  const [timeOffset, setTimeOffset] = useState(initialOffsetTime || 5);
+  const [timeOffset, setTimeOffset] = useState(5);
   const audioRef = useRef(null);
 
   useEffect(() => {
@@ -30,12 +30,6 @@ const AlarmClock = ({ initialOffsetTime, onAlarmTrigger }) => {
     const alarmChecker = setInterval(checkAlarms, 1000);
     return () => clearInterval(alarmChecker);
   }, [alarms]);
-
-  useEffect(() => {
-    if (onAlarmTrigger) {
-      onAlarmTrigger(() => handleAddOffsetAlarm());
-    }
-  }, [onAlarmTrigger, timeOffset]);
 
   const isAlarmTime = (alarmTime) => {
     const [alarmHours, alarmMinutes] = alarmTime.split(':');
